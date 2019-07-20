@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t cjimchen/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run cjimchen/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t cjimchen/multi-client ./client
+  - docker build -t cjimchen/multi-nginx ./nginx
+  - docker build -t cjimchen/multi-server ./server
+  - docker build -t cjimchen/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "DOCKER_ID" --password-stdin
+  # Take these images and push to docker hub
+  - docker push cjimchen/multi-client
+  - docker push cjimchen/multi-nginx
+  - docker push cjimchen/multi-server
+  - docker push cjimchen/multi-worker
